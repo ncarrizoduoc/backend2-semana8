@@ -1,0 +1,61 @@
+package com.minimarket.minimarket.controller;
+
+import com.minimarket.minimarket.entity.Categoria;
+import com.minimarket.minimarket.service.CategoriaService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+import static com.minimarket.minimarket.security.util.InputSanitizer.*;
+
+@RestController
+@RequestMapping("/api/categorias")
+public class CategoriaController {
+
+    @Autowired
+    private CategoriaService categoriaService;
+
+    @GetMapping
+    public List<Categoria> listarCategorias() {
+        return categoriaService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Categoria> obtenerCategoriaPorId(@PathVariable Long id) {
+        Categoria categoria = categoriaService.findById(id);
+        return (categoria != null) ? ResponseEntity.ok(categoria) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping
+    public Categoria guardarCategoria(@RequestBody Categoria categoria) {
+        sanitizarCategoria(categoria);
+        return categoriaService.save(categoria);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Categoria> actualizarCategoria(@PathVariable Long id, @RequestBody Categoria categoria) {
+        sanitizarCategoria(categoria);
+        Categoria categoriaExistente = categoriaService.findById(id);
+        if (categoriaExistente != null) {
+            categoria.setId(id);
+            return ResponseEntity.ok(categoriaService.save(categoria));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarCategoria(@PathVariable Long id) {
+        Categoria categoria = categoriaService.findById(id);
+        if (categoria != null) {
+            categoriaService.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    private void sanitizarCategoria(Categoria categoria){
+        categoria.setNombre(sanitizeInput(categoria.getNombre()));
+    }
+}
