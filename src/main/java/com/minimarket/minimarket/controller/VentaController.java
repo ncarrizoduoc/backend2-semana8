@@ -2,9 +2,9 @@ package com.minimarket.minimarket.controller;
 
 import com.minimarket.minimarket.entity.Venta;
 import com.minimarket.minimarket.service.VentaService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
