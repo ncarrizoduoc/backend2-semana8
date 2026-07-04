@@ -2,6 +2,7 @@ package com.minimarket.minimarket.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
@@ -9,6 +10,7 @@ import java.util.Set;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Rol {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

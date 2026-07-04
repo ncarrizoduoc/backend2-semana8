@@ -3,6 +3,7 @@ package com.minimarket.minimarket.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
@@ -11,6 +12,7 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Venta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

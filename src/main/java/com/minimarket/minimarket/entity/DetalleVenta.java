@@ -2,11 +2,13 @@ package com.minimarket.minimarket.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class DetalleVenta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
