@@ -1,5 +1,6 @@
 package com.minimarket.minimarket.config;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,9 +11,13 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.minimarket.minimarket.repository.CarritoRepository;
+import com.minimarket.minimarket.repository.CategoriaRepository;
+import com.minimarket.minimarket.repository.ProductoRepository;
 import com.minimarket.minimarket.repository.RolRepository;
 import com.minimarket.minimarket.repository.UsuarioRepository;
-
+import com.minimarket.minimarket.entity.Categoria;
+import com.minimarket.minimarket.entity.Producto;
 import com.minimarket.minimarket.entity.Rol;
 import com.minimarket.minimarket.entity.Usuario;
 
@@ -27,11 +32,20 @@ public class DataInitializer implements ApplicationRunner{
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private CategoriaRepository categoriaRepo;
+
+    @Autowired
+    private ProductoRepository productoRepo;
+
+    @Autowired
+    private CarritoRepository carritoRepo;
+
     @Override
     public void run(ApplicationArguments args) throws Exception{
 
         //Crear los roles en la base de datos
-        for(RolEnum rolEnum : RolEnum.values()){
+        for (RolEnum rolEnum : RolEnum.values()){
             if (rolRepo.findByNombre(rolEnum.name()).isEmpty()){
                 // Crear rol y guardarlo en la base de datos
                 Rol rol = new Rol();
@@ -47,8 +61,13 @@ public class DataInitializer implements ApplicationRunner{
                 usuarioRepo.save(usuario);
             }
 
-        } 
+        }
 
+        // Categoria de ejemplo para facilitar pruebas de endpoints de ProductoController
+        if (categoriaRepo.findAll().isEmpty()){
+            Categoria categoria = new Categoria(null, "Abbarrotes", new ArrayList<Producto>());
+            categoriaRepo.save(categoria);
+        }
 
     }
 
