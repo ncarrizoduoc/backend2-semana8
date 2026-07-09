@@ -1,8 +1,5 @@
 package com.minimarket.minimarket.mapper;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,8 +8,6 @@ import com.minimarket.minimarket.entity.Inventario;
 import com.minimarket.minimarket.entity.Producto;
 import com.minimarket.minimarket.exception.ResourceNotFoundException;
 import com.minimarket.minimarket.repository.ProductoRepository;
-
-import static com.minimarket.minimarket.config.CONSTANTS.*;
 
 @Component
 public class InventarioRequestMapper {
