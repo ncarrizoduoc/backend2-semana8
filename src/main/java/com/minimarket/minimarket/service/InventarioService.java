@@ -8,6 +8,7 @@ public interface InventarioService {
     List<Inventario> findAll();
     Inventario findById(Long id);
     Inventario save(Inventario inventario);
+    Inventario update(Inventario inventario);
     void deleteById(Long id);
     List<Inventario> findByProductoId(Long productoId);
 }

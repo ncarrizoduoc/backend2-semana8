@@ -2,6 +2,7 @@ package com.minimarket.minimarket.service.impl;
 
 import com.minimarket.minimarket.entity.Inventario;
 import com.minimarket.minimarket.entity.Producto;
+import com.minimarket.minimarket.exception.TipoMovimientoNoValidoException;
 import com.minimarket.minimarket.exception.ResourceNotFoundException;
 import com.minimarket.minimarket.exception.StockInsuficienteException;
 import com.minimarket.minimarket.repository.InventarioRepository;
@@ -15,6 +16,8 @@ import java.util.List;
 
 @Service
 public class InventarioServiceImpl implements InventarioService {
+
+    private static final String MENSAJE_TIPO_NO_VALIDO = "El tipo de movimiento no es valido";
 
     @Autowired
     private InventarioRepository inventarioRepository;
@@ -43,8 +46,52 @@ public class InventarioServiceImpl implements InventarioService {
         } else if (inventario.getTipoMovimiento().equals("Salida")){
             producto.setStock(producto.getStock() - inventario.getCantidad());
             validarStock(producto);
+        } else {
+            throw new TipoMovimientoNoValidoException("Error al guardar: " + MENSAJE_TIPO_NO_VALIDO);
         }
-        productoRepo.save(producto);
+        return inventarioRepository.save(inventario);
+    }
+
+    @Transactional
+    public Inventario update(Inventario inventario){
+        Inventario inventarioOriginal = inventarioRepository.findById(inventario.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("No existe el inventario con el ID ingresado"));
+        Producto productoOriginal = inventarioOriginal.getProducto();
+        Producto producto = inventario.getProducto();
+        
+        // Verificar si es necesario actualizar el stock de productos
+        boolean esMismoProducto = productoOriginal.getId().equals(producto.getId());
+        boolean esMismaCantidad = inventarioOriginal.getCantidad().equals(inventario.getCantidad());
+        boolean esMismoTipo  = inventarioOriginal.getTipoMovimiento().equals(inventario.getTipoMovimiento());
+        
+        // Mantener consistencia de stock en base de datos
+        if (!esMismoProducto || !esMismaCantidad || !esMismoTipo){
+            // Restaurar stock del producto antiguo
+            if(inventarioOriginal.getTipoMovimiento().equals("Entrada")){
+                productoOriginal.setStock(productoOriginal.getStock() - inventarioOriginal.getCantidad());
+            } else if(inventarioOriginal.getTipoMovimiento().equals("Salida")){
+                productoOriginal.setStock(productoOriginal.getStock() + inventarioOriginal.getCantidad());
+            } else {
+                throw new TipoMovimientoNoValidoException("Error al actualizar: " + MENSAJE_TIPO_NO_VALIDO);
+            }
+
+            if (esMismoProducto){
+                producto = productoOriginal;
+            }
+
+            // Actualizar stock del producto asociado al inventario
+            if(inventario.getTipoMovimiento().equals("Entrada")){
+                producto.setStock(producto.getStock() + inventario.getCantidad());
+            } else if(inventarioOriginal.getTipoMovimiento().equals("Salida")){
+                producto.setStock(producto.getStock() - inventario.getCantidad());
+            } else {
+                throw new TipoMovimientoNoValidoException("Error al actualizar: " + MENSAJE_TIPO_NO_VALIDO);
+            }
+            
+            validarStock(productoOriginal);
+            productoRepo.save(productoOriginal);
+        }
+
         return inventarioRepository.save(inventario);
     }
 
@@ -71,6 +118,8 @@ public class InventarioServiceImpl implements InventarioService {
             validarStock(producto);
         } else if (inventario.getTipoMovimiento().equals("Salida")){
             producto.setStock(producto.getStock() + inventario.getCantidad());
+        } else {
+            throw new TipoMovimientoNoValidoException("Error al eliminar: " + MENSAJE_TIPO_NO_VALIDO);
         }
         productoRepo.save(producto);
 
