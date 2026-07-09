@@ -21,7 +21,7 @@ public class CategoriaRequest {
     @NotNull(message = "Debe ingresar un ID para la categoria")
     private Long id;
     
-    @Schema(description = "nombre de la categoria")
+    @Schema(description = "Nombre de la categoria")
     @NotNull(message = "Debe ingresar un nombre para la categoria")
     @NotBlank(message = "El nombre de la categoria no puede ser un texto en blanco")
     private String nombre;
