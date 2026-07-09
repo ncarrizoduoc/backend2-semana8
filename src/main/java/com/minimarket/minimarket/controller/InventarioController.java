@@ -67,7 +67,7 @@ public class InventarioController {
         if (existente != null) {
             Inventario inventario = requestMapper.toInventario(request);
             inventario.setId(id);
-            return ResponseEntity.ok(new InventarioResponse(inventarioService.save(inventario)));
+            return ResponseEntity.ok(new InventarioResponse(inventarioService.update(inventario)));
         }
         return ResponseEntity.notFound().build();
     }
