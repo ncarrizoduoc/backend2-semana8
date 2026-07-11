@@ -1,5 +1,6 @@
 package com.minimarket.minimarket.controller;
 
+import com.minimarket.minimarket.dto.EliminadoMessageDTO;
 import com.minimarket.minimarket.dto.UsuarioRequest;
 import com.minimarket.minimarket.dto.UsuarioResponse;
 import com.minimarket.minimarket.entity.Usuario;
@@ -62,13 +63,13 @@ public class UsuarioController {
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = UsuarioResponse[].class)),
             links = {
                 @Link(name = "self", description = "Enlace a datos de usuario", operationId = "obtenerUsuarioPorId"),
-                @Link(name = "actualizarUsuario", description = "Enlace a actualizacion de usuario", operationId = "actualizarUsuario"),
-                @Link(name = "eliminarUsuario", description = "Enlace a eliminacion del usuario", operationId = "eliminarUsuario")
+                @Link(name = "actualizar", description = "Enlace a actualizacion de usuario", operationId = "actualizarUsuario"),
+                @Link(name = "eliminar", description = "Enlace a eliminacion del usuario", operationId = "eliminarUsuario")
             }
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -84,8 +85,8 @@ public class UsuarioController {
         for(Usuario usuario:usuarios){
             lista.add(EntityModel.of(new UsuarioResponse(usuario),
                 linkTo(methodOn(UsuarioController.class).obtenerUsuarioPorId(usuario.getId())).withSelfRel(),
-                linkTo(methodOn(UsuarioController.class).actualizarUsuario(usuario.getId(), new UsuarioRequest())).withRel("actualizarUsuario"),
-                linkTo(methodOn(UsuarioController.class).eliminarUsuario(usuario.getId())).withRel("eliminarUsuario")
+                linkTo(methodOn(UsuarioController.class).actualizarUsuario(usuario.getId(), new UsuarioRequest())).withRel("actualizar"),
+                linkTo(methodOn(UsuarioController.class).eliminarUsuario(usuario.getId())).withRel("eliminar")
             )
         );
         }
@@ -107,8 +108,8 @@ public class UsuarioController {
             links = {
                 @Link(name = "self", description = "Enlace a datos del usuario buscado", operationId = "obtenerUsuarioPorId"),
                 @Link(name = "listarUsuarios", description = "Enlace a la lista de todos los usuarios", operationId = "listarUsuarios"),
-                @Link(name = "actualizarUsuario", description = "Enlace a actualizacion de usuario buscado", operationId = "actualizarUsuario"),
-                @Link(name = "eliminarUsuario", description = "Enlace a eliminacion del usuario buscado", operationId = "eliminarUsuario")
+                @Link(name = "actualizar", description = "Enlace a actualizacion de usuario buscado", operationId = "actualizarUsuario"),
+                @Link(name = "eliminar", description = "Enlace a eliminacion del usuario buscado", operationId = "eliminarUsuario")
             }
         ),
         @ApiResponse(
@@ -117,11 +118,11 @@ public class UsuarioController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Usuario no encontrado",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -129,7 +130,7 @@ public class UsuarioController {
         )}
     )
     public ResponseEntity<EntityModel<UsuarioResponse>> obtenerUsuarioPorId(
-        @Parameter(description = "ID del usuario buscado", required = true) @PathVariable Long id) {
+        @Parameter(description = "ID del usuario buscado", required = true, example = "1") @PathVariable Long id) {
         Optional<Usuario> buscado = usuarioService.findById(id);
         if (!buscado.isEmpty()){
             Usuario usuario = buscado.get();
@@ -138,8 +139,8 @@ public class UsuarioController {
             EntityModel<UsuarioResponse> response = EntityModel.of(usuarioResponse,
                 linkTo(methodOn(UsuarioController.class).obtenerUsuarioPorId(id)).withSelfRel(),
                 linkTo(methodOn(UsuarioController.class).listarUsuarios()).withRel("listarUsuarios"),
-                linkTo(methodOn(UsuarioController.class).actualizarUsuario(id, new UsuarioRequest())).withRel("actualizarUsuario"),
-                linkTo(methodOn(UsuarioController.class).eliminarUsuario(id)).withRel("eliminarUsuario")
+                linkTo(methodOn(UsuarioController.class).actualizarUsuario(id, new UsuarioRequest())).withRel("actualizar"),
+                linkTo(methodOn(UsuarioController.class).eliminarUsuario(id)).withRel("eliminar")
             );
             
             return ResponseEntity.ok(response);
@@ -159,8 +160,8 @@ public class UsuarioController {
             links = {
                 @Link(name = "self", description = "Enlace a datos del usuario creado", operationId = "obtenerUsuarioPorId"),
                 @Link(name = "listarUsuarios", description = "Enlace a la lista de todos los usuarios", operationId = "listarUsuarios"),
-                @Link(name = "actualizarUsuario", description = "Enlace a actualizacion de usuario creado", operationId = "actualizarUsuario"),
-                @Link(name = "eliminarUsuario", description = "Enlace a eliminacion del usuario creado", operationId = "eliminarUsuario")
+                @Link(name = "actualizar", description = "Enlace a actualizacion de usuario creado", operationId = "actualizarUsuario"),
+                @Link(name = "eliminar", description = "Enlace a eliminacion del usuario creado", operationId = "eliminarUsuario")
             }
         ),
         @ApiResponse(
@@ -169,11 +170,11 @@ public class UsuarioController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Rol no encontrado",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -200,8 +201,8 @@ public class UsuarioController {
         EntityModel<UsuarioResponse> usuarioModel = EntityModel.of(response,
             linkTo(methodOn(UsuarioController.class).obtenerUsuarioPorId(creado.getId())).withSelfRel(),
             linkTo(methodOn(UsuarioController.class).listarUsuarios()).withRel("listarUsuarios"),
-            linkTo(methodOn(UsuarioController.class).actualizarUsuario(creado.getId(), new UsuarioRequest())).withRel("actualizarUsuario"),
-            linkTo(methodOn(UsuarioController.class).eliminarUsuario(creado.getId())).withRel("eliminarUsuario")
+            linkTo(methodOn(UsuarioController.class).actualizarUsuario(creado.getId(), new UsuarioRequest())).withRel("actualizar"),
+            linkTo(methodOn(UsuarioController.class).eliminarUsuario(creado.getId())).withRel("eliminar")
         );
 
         return ResponseEntity.ok(usuarioModel);
@@ -219,7 +220,7 @@ public class UsuarioController {
             links = {
                 @Link(name = "self", description = "Enlace a datos del usuario actualizado", operationId = "obtenerUsuarioPorId"),
                 @Link(name = "listarUsuarios", description = "Enlace a la lista de todos los usuarios", operationId = "listarUsuarios"),
-                @Link(name = "eliminarUsuario", description = "Enlace a eliminacion del usuario actualizado", operationId = "eliminarUsuario")
+                @Link(name = "eliminar", description = "Enlace a eliminacion del usuario actualizado", operationId = "eliminarUsuario")
             }
         ),
         @ApiResponse(
@@ -228,11 +229,11 @@ public class UsuarioController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Usuario no encontrado o rol no encontrado",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -240,7 +241,7 @@ public class UsuarioController {
         )}
     )
     public ResponseEntity<EntityModel<UsuarioResponse>> actualizarUsuario(
-        @Parameter(description = "ID del usuario que se desea actualizar", required = true) @PathVariable Long id, 
+        @Parameter(description = "ID del usuario que se desea actualizar", required = true, example = "1") @PathVariable Long id, 
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "Usuario con datos actualizados", 
             required = true
@@ -261,7 +262,7 @@ public class UsuarioController {
             EntityModel<UsuarioResponse> usuarioModel = EntityModel.of(response,
                 linkTo(methodOn(UsuarioController.class).obtenerUsuarioPorId(id)).withSelfRel(),
                 linkTo(methodOn(UsuarioController.class).listarUsuarios()).withRel("listarUsuarios"),
-                linkTo(methodOn(UsuarioController.class).eliminarUsuario(id)).withRel("eliminarUsuario")
+                linkTo(methodOn(UsuarioController.class).eliminarUsuario(id)).withRel("eliminar")
             );
 
             return ResponseEntity.ok(usuarioModel);
@@ -277,7 +278,7 @@ public class UsuarioController {
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200", description = "Usuario eliminado exitosamente (No content)",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true)),
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = EliminadoMessageDTO.class)),
             links = {
                 @Link(name = "listarUsuarios", description = "Enlace a lista con todos los usuarios", operationId = "listarUsuarios"),
                 @Link(name = "guardarUsuario", description = "Enlace para crear nuevo usuario", operationId = "guardarUsuario")
@@ -289,11 +290,11 @@ public class UsuarioController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Usuario no encontrado",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -301,7 +302,7 @@ public class UsuarioController {
         )}
     )
     public ResponseEntity<EntityModel<Map<String, String>>> eliminarUsuario(
-        @Parameter(description = "ID del usuario que se desea eliminar", required = true) @PathVariable Long id) {
+        @Parameter(description = "ID del usuario que se desea eliminar", required = true, example = "1") @PathVariable Long id) {
         Optional<Usuario> usuario = usuarioService.findById(id);
         if (usuario.isPresent()) { // Verifica si el usuario existe
             usuarioService.deleteById(id); // Elimina al usuario

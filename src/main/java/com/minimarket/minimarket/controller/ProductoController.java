@@ -1,5 +1,6 @@
 package com.minimarket.minimarket.controller;
 
+import com.minimarket.minimarket.dto.EliminadoMessageDTO;
 import com.minimarket.minimarket.dto.ProductoRequest;
 import com.minimarket.minimarket.dto.ProductoResponse;
 import com.minimarket.minimarket.entity.Producto;
@@ -10,6 +11,7 @@ import com.minimarket.minimarket.service.ProductoService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.links.Link;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,11 +22,16 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.PositiveOrZero;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 import static com.minimarket.minimarket.security.util.InputSanitizer.*;
 
 @RestController
@@ -46,11 +53,16 @@ public class ProductoController {
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200", description = "Lista de productos obtenida exitosamente",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse[].class))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse[].class)),
+            links = {
+                @Link(name = "self", description = "Enlace a datos de producto", operationId = "obtenerProductoPorId"),
+                @Link(name = "actualizar", description = "Enlace a actualizacion de producto", operationId = "actualizarProducto"),
+                @Link(name = "eliminar", description = "Enlace a eliminacion del producto", operationId = "eliminarProducto")
+            }
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -58,10 +70,24 @@ public class ProductoController {
         )
         }
     )
-    public List<ProductoResponse> listarProductos() {
-        return productoService.findAll().stream().map(ProductoResponse :: new).toList();
+    public ResponseEntity<List<EntityModel<ProductoResponse>>> listarProductos() {
+        List<Producto> productos = productoService.findAll();
+
+        // Se guarda cada producto en una lista con sus links asociados
+        List<EntityModel<ProductoResponse>> lista = new ArrayList<>();
+        for(Producto producto : productos){
+            lista.add(EntityModel.of(new ProductoResponse(producto),
+                linkTo(methodOn(ProductoController.class).obtenerProductoPorId(producto.getId())).withSelfRel(),
+                linkTo(methodOn(ProductoController.class).actualizarProducto(producto.getId(), new ProductoRequest())).withRel("actualizar"),
+                linkTo(methodOn(ProductoController.class).eliminarProducto(producto.getId())).withRel("eliminar")
+            )
+        );
+        }
+
+        return ResponseEntity.ok(lista);
     }
 
+    //---------------------------------------------
 
     @GetMapping("/{id}")
     @Operation(
@@ -71,7 +97,13 @@ public class ProductoController {
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200", description = "Producto recuperado exitosamente",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse.class))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse.class)),
+            links = {
+                @Link(name = "self", description = "Enlace a datos del producto buscado", operationId = "obtenerProductoPorId"),
+                @Link(name = "listarProductos", description = "Enlace a la lista de todos los productos", operationId = "listarProductos"),
+                @Link(name = "actualizar", description = "Enlace a actualizacion de producto buscado", operationId = "actualizarProducto"),
+                @Link(name = "eliminar", description = "Enlace a eliminacion del producto buscado", operationId = "eliminarProducto")
+            }
         ),
         @ApiResponse(
             responseCode = "400", description = "Solicitud incorrecta",
@@ -79,24 +111,36 @@ public class ProductoController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Producto no encontrado",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
         )}
     )
-    public ResponseEntity<ProductoResponse> obtenerProductoPorId(
-        @Parameter(description = "ID del producto buscado", required = true) @PathVariable @PositiveOrZero Long id
+    public ResponseEntity<EntityModel<ProductoResponse>> obtenerProductoPorId(
+        @Parameter(description = "ID del producto buscado", required = true, example = "1") @PathVariable @PositiveOrZero Long id
     ) {
         Producto producto = productoService.findById(id);
-        return (producto != null) ? ResponseEntity.ok(new ProductoResponse(producto)) : ResponseEntity.notFound().build();
+        if (producto != null){
+            ProductoResponse productoResponse = new ProductoResponse(producto);
+            EntityModel<ProductoResponse> response = EntityModel.of(productoResponse,
+                linkTo(methodOn(ProductoController.class).obtenerProductoPorId(id)).withSelfRel(),
+                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("listarProductos"),
+                linkTo(methodOn(ProductoController.class).actualizarProducto(id, new ProductoRequest())).withRel("actualizar"),
+                linkTo(methodOn(ProductoController.class).eliminarProducto(id)).withRel("eliminar")
+            );
+
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.notFound().build();
     }
 
+    //---------------------------------------------
 
     @PostMapping
     @Operation(
@@ -107,7 +151,13 @@ public class ProductoController {
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200", description = "Producto registrado exitosamente",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse.class))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse.class)),
+            links = {
+                @Link(name = "self", description = "Enlace a datos del producto creado", operationId = "obtenerProductoPorId"),
+                @Link(name = "listarProductos", description = "Enlace a la lista de todos los productos", operationId = "listarProductos"),
+                @Link(name = "actualizar", description = "Enlace a actualizacion de producto creado", operationId = "actualizarProducto"),
+                @Link(name = "eliminar", description = "Enlace a eliminacion del producto creado", operationId = "eliminarProducto")
+            }
         ),
         @ApiResponse(
             responseCode = "400", description = "Solicitud incorrecta",
@@ -115,18 +165,18 @@ public class ProductoController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Categoria asociada a producto no encontrada",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
         )}
     )
-    public ProductoResponse guardarProducto(
+    public ResponseEntity<EntityModel<ProductoResponse>> guardarProducto(
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "Producto para guardar en base de datos", 
             required = true
@@ -136,9 +186,23 @@ public class ProductoController {
         sanitizarProducto(request);
         Producto producto = requestMapper.toProducto(request);
         producto.setId(null);
-        return new ProductoResponse(productoService.save(producto));
+
+        //Guardar producto
+        Producto creado = productoService.save(producto);
+        ProductoResponse response = new ProductoResponse(creado);
+
+        // Generar EntityModel con links
+        EntityModel<ProductoResponse> productoModel = EntityModel.of(response,
+            linkTo(methodOn(ProductoController.class).obtenerProductoPorId(creado.getId())).withSelfRel(),
+            linkTo(methodOn(ProductoController.class).listarProductos()).withRel("listarProductos"),
+            linkTo(methodOn(ProductoController.class).actualizarProducto(creado.getId(), new ProductoRequest())).withRel("actualizar"),
+            linkTo(methodOn(ProductoController.class).eliminarProducto(creado.getId())).withRel("eliminar")
+        );
+
+        return ResponseEntity.ok(productoModel);
     }
 
+    //---------------------------------------------
 
     @PutMapping("/{id}")
     @SecurityRequirement(name = "bearerAuth")
@@ -149,7 +213,12 @@ public class ProductoController {
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200", description = "Producto actualizado exitosamente",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse.class))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductoResponse.class)),
+            links = {
+                @Link(name = "self", description = "Enlace a datos del producto actualizado", operationId = "obtenerProductoPorId"),
+                @Link(name = "listarProductos", description = "Enlace a la lista de todos los productos", operationId = "listarProductos"),
+                @Link(name = "eliminar", description = "Enlace a eliminacion del producto actualizado", operationId = "eliminarProducto")
+            }
         ),
         @ApiResponse(
             responseCode = "400", description = "Solicitud incorrecta",
@@ -157,19 +226,19 @@ public class ProductoController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Producto no encontrado o categoria no encontrada",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
         )}
     )
-    public ResponseEntity<ProductoResponse> actualizarProducto(
-        @Parameter(description = "ID del producto modificado", required = true) @PathVariable Long id,
+    public ResponseEntity<EntityModel<ProductoResponse>> actualizarProducto(
+        @Parameter(description = "ID del producto modificado", required = true, example = "1") @PathVariable Long id,
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "Producto con datos actualizados", 
             required = true
@@ -181,11 +250,24 @@ public class ProductoController {
         if (productoExistente != null) {
             Producto producto = requestMapper.toProducto(request);
             producto.setId(id);
-            return ResponseEntity.ok(new ProductoResponse(productoService.save(producto)));
+            
+            // Actualizar producto
+            Producto actualizado = productoService.save(producto);
+            ProductoResponse response = new ProductoResponse(actualizado);
+
+            // Generar EntityModel con links
+            EntityModel<ProductoResponse> productoModel = EntityModel.of(response,
+                linkTo(methodOn(ProductoController.class).obtenerProductoPorId(id)).withSelfRel(),
+                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("listarProductos"),
+                linkTo(methodOn(ProductoController.class).eliminarProducto(id)).withRel("eliminar")
+            );
+
+            return ResponseEntity.ok(productoModel);
         }
         return ResponseEntity.notFound().build();
     }
 
+    //---------------------------------------------
 
     @DeleteMapping("/{id}")
     @SecurityRequirement(name = "bearerAuth")
@@ -195,8 +277,12 @@ public class ProductoController {
     )
     @ApiResponses(value = {
         @ApiResponse(
-            responseCode = "204", description = "Producto eliminado exitosamente (No content)",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            responseCode = "200", description = "Producto eliminado exitosamente (No content)",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = EliminadoMessageDTO.class)),
+            links = {
+                @Link(name = "listarProductos", description = "Enlace a lista con todos los productos", operationId = "listarProductos"),
+                @Link(name = "guardarProducto", description = "Enlace para crear nuevo producto", operationId = "guardarProducto")
+            }
         ),
         @ApiResponse(
             responseCode = "400", description = "Solicitud incorrecta",
@@ -204,24 +290,31 @@ public class ProductoController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Producto no encontrado",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
             content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))
         )}
     )
-    public ResponseEntity<Void> eliminarProducto(
-        @Parameter(description = "ID del producto que se desea eliminar", required = true) @PathVariable Long id
+    public ResponseEntity<EntityModel<Map<String, String>>> eliminarProducto(
+        @Parameter(description = "ID del producto que se desea eliminar", required = true, example = "1") @PathVariable Long id
     ) {
         Producto producto = productoService.findById(id);
         if (producto != null) {
             productoService.deleteById(id);
-            return ResponseEntity.noContent().build();
+
+            EntityModel<Map<String, String>> responseModel = EntityModel.of(
+                Map.of("message", "Producto eliminado exitosamente"),
+                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("listarProductos"),
+                linkTo(methodOn(ProductoController.class).guardarProducto(new ProductoRequest())).withRel("guardarProducto")
+            );
+
+            return ResponseEntity.ok(responseModel);
         }
         return ResponseEntity.notFound().build();
     }
