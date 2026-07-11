@@ -45,7 +45,7 @@ public class CategoriaController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -73,11 +73,11 @@ public class CategoriaController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Categoria no encontrada",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -85,7 +85,7 @@ public class CategoriaController {
         )}
     )
     public ResponseEntity<CategoriaResponse> obtenerCategoriaPorId(
-        @Parameter(description = "ID de la categoria buscada", required = true) @PathVariable Long id
+        @Parameter(description = "ID de la categoria buscada", required = true, example = "1") @PathVariable Long id
     ) {
         Categoria categoria = categoriaService.findById(id);
         return (categoria != null) ? ResponseEntity.ok(new CategoriaResponse(categoria)) : ResponseEntity.notFound().build();
@@ -109,7 +109,7 @@ public class CategoriaController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -146,11 +146,11 @@ public class CategoriaController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Categoria no encontrada",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -158,7 +158,7 @@ public class CategoriaController {
         )}
     )
     public ResponseEntity<CategoriaResponse> actualizarCategoria(
-        @Parameter(description = "ID de la categoria modificada", required = true) @PathVariable Long id,
+        @Parameter(description = "ID de la categoria modificada", required = true, example = "1") @PathVariable Long id,
         @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "Categoria con datos actualizados", 
             required = true
@@ -185,7 +185,7 @@ public class CategoriaController {
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "204", description = "Categoria eliminada exitosamente (No content)",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "400", description = "Solicitud incorrecta",
@@ -193,11 +193,11 @@ public class CategoriaController {
         ),
         @ApiResponse(
             responseCode = "403", description = "Prohibido",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "404", description = "Categoria no encontrada",
-            content = @Content(mediaType = "application/json", schema = @Schema(hidden = true))
+            content = @Content(schema = @Schema(hidden = true))
         ),
         @ApiResponse(
             responseCode = "500", description = "Error interno del servidor",
@@ -205,7 +205,7 @@ public class CategoriaController {
         )}
     )
     public ResponseEntity<Void> eliminarCategoria(
-        @Parameter(description = "ID de la categoria que se desea eliminar", required = true) @PathVariable Long id
+        @Parameter(description = "ID de la categoria que se desea eliminar", required = true, example = "1") @PathVariable Long id
     ) {
         Categoria categoria = categoriaService.findById(id);
         if (categoria != null) {
